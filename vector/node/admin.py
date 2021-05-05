@@ -16,9 +16,10 @@ class VectorAdmin(admin.ModelAdmin):
     def response_delete(self, request, obj, qq):
         return redirect('/')
 
+
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
-    #fields = ('type', 'vectors')
+
     def response_add(self, request, obj, post_url_continue=None):
         return redirect('/')
 
@@ -27,6 +28,3 @@ class OperationAdmin(admin.ModelAdmin):
 
     def response_delete(self, request, obj, qq):
         return redirect('/')
-
-    
-
