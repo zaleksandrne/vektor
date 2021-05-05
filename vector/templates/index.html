@@ -22,7 +22,7 @@
      
       var nodes = new vis.DataSet([
 
-{% for vector in vectors %}{ id: {{ vector.id }}, label: "{{ vector.array }}" }, 
+{% for vector in vectors %}{ id: {{ vector.id }}, label: "{{ vector.array }}".replace(/\[|\]/g, '') }, 
 {% endfor %}
 
 {% for operation in operations %}{ id: {{ operation.id }}, label: "{{ operation.type }}", shape: "box", color: "#7BE141" }, 
@@ -53,9 +53,18 @@ var options = {
 var network = new vis.Network(container, data, options);
 network.on("doubleClick", function(properties) {
   if(!properties.nodes.length) return;
- 
+ console.log(properties)
   window.location.replace(`/admin/node/vector/${properties.nodes}/change/`);
-
+  $.ajax({
+ statusCode: {
+  404: function() {
+    alert( "page not found" );
+  }
+ }
+});
+});
+network.on("click", function (params) {
+  console.log(params);
 });
     </script>
 <button type="button" style="background-color:rgb(143, 164, 230);">
