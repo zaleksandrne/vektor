@@ -35,7 +35,6 @@ class Operation(models.Model):
 
 def vectors_changed(sender, instance, action, pk_set, **kwargs):
     if action == 'post_add' and pk_set:
-        print(pk_set)
         for item in pk_set:
             vector = Vector.objects.get(id=item)
             if instance.type == 'add':
@@ -50,8 +49,6 @@ def vectors_changed(sender, instance, action, pk_set, **kwargs):
         instance.save()
         for item in pk_set:
             vector = Vector.objects.get(id=item)
-            print(len(instance.array))
-            print(len(vector.array))
             vector.array += (len(instance.array) - len(vector.array)) * [0]
             vector.save()
 
@@ -73,7 +70,6 @@ def save_operation(sender, instance, **kwargs):
         operation.new_vector.array = arr
         operation.new_vector.save()
         for vector in operation.vectors.all():
-            print(vector)
             vector.array += (len(operation.array) - len(vector.array)) * [0]
             post_save.disconnect(save_operation, sender=Vector)
             vector.save()
@@ -90,14 +86,14 @@ def vector_delete_pre(sender, instance, **kwargs):
             operation.new_vector.array = []
             for vector in operation.vectors.exclude(id=instance.id):
                 if operation.type == 'add':
-                    c = [x+y for x, y in zip_longest(
+                    arr = [x+y for x, y in zip_longest(
                         operation.array, vector.array, fillvalue=0)]
                 elif operation.type == 'mult':
-                    c = [x * y for x, y in zip_longest(
+                    arr = [x * y for x, y in zip_longest(
                         operation.array, vector.array, fillvalue=1)]
-                operation.array = c
+                operation.array = arr
             operation.save()
-            operation.new_vector.array = c
+            operation.new_vector.array = arr
             operation.new_vector.save()
 
 
