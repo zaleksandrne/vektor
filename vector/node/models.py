@@ -44,8 +44,11 @@ def vectors_changed(sender, instance, action, pk_set, **kwargs):
                 arr = [x * y for x, y in zip_longest(
                     instance.array, vector.array, fillvalue=1)]
             instance.array = arr
-        vector = Vector.objects.create(array=instance.array)
-        instance.new_vector = vector
+        try:
+            instance.new_vector.array = arr
+        except AttributeError:
+            vector = Vector.objects.create(array=instance.array)
+            instance.new_vector = vector
         instance.save()
         for item in pk_set:
             vector = Vector.objects.get(id=item)
