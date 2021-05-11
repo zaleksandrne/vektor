@@ -7,7 +7,7 @@ from django.db.models.signals import m2m_changed, post_save, pre_delete
 
 
 class Vector(models.Model):
-    array = ArrayField(models.DecimalField(max_digits=5, decimal_places=2))
+    array = ArrayField(models.DecimalField(max_digits=15, decimal_places=2))
 
     def __str__(self):
         return f'id:{self.id}, arr:{self.array}'
@@ -22,7 +22,7 @@ class Operation(models.Model):
         Vector,
         verbose_name='Vector'
         )
-    array = ArrayField(models.DecimalField(max_digits=5, decimal_places=2),
+    array = ArrayField(models.DecimalField(max_digits=15, decimal_places=2),
                                            blank=True,
                                            null=True)
     new_vector = models.OneToOneField(Vector,
