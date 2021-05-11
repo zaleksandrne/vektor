@@ -18,27 +18,18 @@
     <div id="mynetwork"></div>
     {{ page }}
     <script type="text/javascript">
-      // create an array with nodes
-     
       var nodes = new vis.DataSet([
-
-{% for vector in vectors %}{ id: {{ vector.id }}, label: "{{ vector.array }}".replace(/\[|\]/g, '') }, 
+{% for vector in vectors %}{ id: {{ vector.id }}, label: "{% for num in vector.array %}{{ num | safe }}{% if not forloop.last %}, {% endif %}{% endfor %}".replace(/.00/g, '')}, 
 {% endfor %}
-
 {% for operation in operations %}{ id: {{ operation.id }}, label: "{{ operation.type }}", shape: "box", color: "#7BE141" }, 
 {% endfor %}
 ]);
-
-// create an array with edges
 var edges = new vis.DataSet([
 {% for operation in operations %}{ from: {{ operation.id}}, to: {{ operation.new_vector.id}}, arrows: "to" }, 
 {% endfor %}
 {% for operation in operations %} {% for item in operation.vectors.all %}{ from: {{ item.id}}, to: {{ operation.id}}, arrows: "to" }, {% endfor %}
 {% endfor %}
 ]);
-
-
-// create a network
 var container = document.getElementById("mynetwork");
 var data = {
   nodes: nodes,
