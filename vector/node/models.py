@@ -6,14 +6,18 @@ from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import m2m_changed, post_save, pre_delete
 
 
-class Vector(models.Model):
+class BaseModel(models.Model):
+    pass
+
+
+class Vector(BaseModel):
     array = ArrayField(models.DecimalField(max_digits=15, decimal_places=2))
 
     def __str__(self):
         return f'id:{self.id}, arr:{self.array}'
 
 
-class Operation(models.Model):
+class Operation(BaseModel):
     CHOICES = (('add', 'addition'),
                ('mult', 'multiplication'),
                ('length', 'length'))
