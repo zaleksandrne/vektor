@@ -44,9 +44,9 @@ class Operation(BaseModel):
 
 
 def vectors_changed(sender, instance, action, pk_set, **kwargs):
-    if action == 'post_add' and pk_set:
-        for item in pk_set:
-            vector = Vector.objects.get(id=item)
+    instance.array = []
+    if action in ('post_add', 'post_remove') and pk_set:
+        for vector in instance.vectors.all():
             if instance.type == 'add':
                 arr = [x+y for x, y in zip_longest(
                     instance.array, vector.array, fillvalue=0)]
@@ -127,9 +127,20 @@ def vector_delete_pre(sender, instance, **kwargs):
 
 
 def edit_operation(sender, instance, **kwargs):
+    
     if instance.new_vector:
         instance.array = []
         instance.new_vector.array = []
+        max_l = 0
+        if instance.type != 'length':
+            for vector in instance.vectors.all():
+                if len(vector.array) > max_l:
+                    max_l = len(vector.array)
+            for vector in instance.vectors.all():
+                vector.array += (max_l - len(vector.array)) * [0]
+                post_save.disconnect(save_operation, sender=Vector)
+                vector.save()
+                post_save.connect(save_operation, sender=Vector)
         for vector in instance.vectors.all():
             if instance.type == 'add':
                 arr = [x+y for x, y in zip_longest(
