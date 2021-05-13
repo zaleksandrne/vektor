@@ -43,7 +43,7 @@ class Operation(BaseModel):
         return f'id:{self.id}, type:{self.type}, new_vector:{self.array}'
 
 
-def vectors_changed(sender, instance, action, pk_set, **kwargs):
+def new_operation_or_vector_change(sender, instance, action, pk_set, **kwargs):
     instance.array = []
     if action in ('post_add', 'post_remove') and pk_set:
         for vector in instance.vectors.all():
@@ -62,6 +62,7 @@ def vectors_changed(sender, instance, action, pk_set, **kwargs):
             instance.new_vector.save()
         except AttributeError:
             vector = Vector.objects.create(array=instance.array)
+            vector.save()
             instance.new_vector = vector
         instance.save()
         if instance.type != 'length':
@@ -72,6 +73,13 @@ def vectors_changed(sender, instance, action, pk_set, **kwargs):
 
 
 def save_operation(sender, instance, **kwargs):
+    unwritable_vector = Operation.objects.filter(new_vector=instance)
+    if unwritable_vector:
+        instance.array = Operation.objects.get(new_vector=instance).array
+        post_save.disconnect(save_operation, sender=Vector)
+        instance.save()
+        post_save.connect(save_operation, sender=Vector)
+
     o = Operation.objects.filter(vectors__id=instance.id)
     for operation in o:
         operation.array = []
@@ -102,7 +110,7 @@ def save_operation(sender, instance, **kwargs):
         operation.new_vector.save()
 
 
-def vector_delete_pre(sender, instance, **kwargs):
+def vector_delete(sender, instance, **kwargs):
     o = Operation.objects.filter(vectors__id=instance.id)
     for operation in o:
         if operation.vectors.all().count() < 3:
@@ -127,7 +135,6 @@ def vector_delete_pre(sender, instance, **kwargs):
 
 
 def edit_operation(sender, instance, **kwargs):
-    
     if instance.new_vector:
         instance.array = []
         instance.new_vector.array = []
@@ -159,8 +166,10 @@ def edit_operation(sender, instance, **kwargs):
         instance.new_vector.save()
 
 
-m2m_changed.connect(vectors_changed, sender=Operation.vectors.through)
+m2m_changed.connect(new_operation_or_vector_change, 
+                    sender=Operation.vectors.through
+                    )
 post_save.connect(save_operation, sender=Vector)
-pre_delete.connect(vector_delete_pre, sender=Vector)
+pre_delete.connect(vector_delete, sender=Vector)
 post_save.connect(edit_operation, sender=Operation)
 
