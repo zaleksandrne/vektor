@@ -126,7 +126,30 @@ def vector_delete_pre(sender, instance, **kwargs):
             operation.new_vector.save()
 
 
+def edit_operation(sender, instance, **kwargs):
+    if instance.new_vector:
+        instance.array = []
+        instance.new_vector.array = []
+        for vector in instance.vectors.all():
+            if instance.type == 'add':
+                arr = [x+y for x, y in zip_longest(
+                    instance.array, vector.array, fillvalue=0)]
+            elif instance.type == 'mult':
+                arr = [x * y for x, y in zip_longest(
+                    instance.array, vector.array, fillvalue=1)]
+            elif instance.type == 'length':
+                p = math.sqrt(sum([i * i for i in vector.array]))
+                arr = [n for n in instance.array + [p]]
+            instance.array = arr
+        post_save.disconnect(edit_operation, sender=Operation)
+        instance.save()
+        post_save.connect(edit_operation, sender=Operation)
+        instance.new_vector.array = arr
+        instance.new_vector.save()
+
+
 m2m_changed.connect(vectors_changed, sender=Operation.vectors.through)
 post_save.connect(save_operation, sender=Vector)
 pre_delete.connect(vector_delete_pre, sender=Vector)
+post_save.connect(edit_operation, sender=Operation)
 
